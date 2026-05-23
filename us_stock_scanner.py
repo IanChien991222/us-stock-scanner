@@ -71,7 +71,11 @@ def send_telegram_text(message: str):
         print(message)
         return
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": message}, timeout=20)
+    try:
+        requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": message}, timeout=20)
+    except Exception as e:
+        print(f"Telegram 文字訊息發送失敗: {e}")
+        print(message)
 
 
 def send_telegram_photos(image_paths, caption=""):
@@ -86,14 +90,17 @@ def send_telegram_photos(image_paths, caption=""):
         data = {"chat_id": TELEGRAM_CHAT_ID}
         if i == 0 and caption:
             data["caption"] = caption
-        with open(path, "rb") as f:
-            resp = requests.post(url, data=data, files={"photo": f}, timeout=60)
+        try:
+            with open(path, "rb") as f:
+                resp = requests.post(url, data=data, files={"photo": f}, timeout=60)
             try:
                 result = resp.json()
                 if not result.get("ok"):
                     print("Telegram 發圖失敗:", result)
             except Exception:
                 print("Telegram 發圖失敗:", resp.text)
+        except Exception as e:
+            print(f"Telegram 圖片發送失敗 {path}: {e}")
 
 
 def get_trump_signal():
@@ -646,7 +653,7 @@ def run_scan():
         result["news_score"] = news_score
         result["total_score"] += trump["score"] + news_score
 
-        if result["setup_type"] in {"Breakout", "Pullback", "Momentum"} and result["total_score"] >= 52:
+        if result["setup_type"] in {"Breakout", "Pullback", "Momentum"} and result["total_score"] >= 48:
             results.append(result)
 
     results.sort(key=lambda x: x["total_score"], reverse=True)
