@@ -214,12 +214,27 @@ def analyze_stock(ticker: str):
 
 def format_report(results, trump):
     now = datetime.now().strftime("%Y/%m/%d %H:%M")
-    msg = f"📊 *美股每日掃描報告*\\n━━━━━━━━━━━━━━━━━━\\n🗓 {now}（台灣時間）\\n📡 川普訊號：*{trump['direction']}*（信心 {trump['confidence']:.0%}）\\n" + "\\n".join(trump["reasoning"]) + "\\n━━━━━━━━━━━━━━━━━━\\n\\n"
+    msg = f"""📊 *美股每日掃描報告*
+━━━━━━━━━━━━━━━━━━
+🗓 {now}（台灣時間）
+📡 川普訊號：*{trump['direction']}*（信心 {trump['confidence']:.0%}）
+{chr(10).join(trump["reasoning"])}
+━━━━━━━━━━━━━━━━━━
+
+"""
     for i, r in enumerate(results[:5], 1):
-        msg += f"*#{i} {r['ticker']}*\\n💵 現價 `${r['close']:.2f}` | RSI `{r['rsi']:.0f}`\\n📐 評分 `{r['total_score']}/100`\\n📌 入場邏輯\\n"
+        msg += f"""*#{i} {r['ticker']}*
+💵 現價 `${r['close']:.2f}` | RSI `{r['rsi']:.0f}`
+📐 評分 `{r['total_score']}/100`
+📌 入場邏輯
+"""
         for sig in r["signals"][:4]:
-            msg += f"• {sig}\\n"
-        msg += f"🛡 停損 `${r['stop_loss']:.2f}`（{r['stop_loss_pct']:.1f}%）\\n📈 近5日 `{r['pct_5d']:+.1f}%` | 距高點 `{r['pct_from_52w_high']:.1f}%`\\n🏢 {r['sector']}\\n\\n"
+            msg += f"• {sig}\n"
+        msg += f"""🛡 停損 `${r['stop_loss']:.2f}`（{r['stop_loss_pct']:.1f}%）
+📈 近5日 `{r['pct_5d']:+.1f}%` | 距高點 `{r['pct_from_52w_high']:.1f}%`
+🏢 {r['sector']}
+
+"""
     msg += "⚠️ _僅供參考，非投資建議_"
     return msg
 
