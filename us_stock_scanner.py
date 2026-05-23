@@ -320,8 +320,7 @@ def generate_report_images(results, trump):
 def build_caption(results, trump):
     if not results: return "No picks today."
     top = results[0]
-    return (f"📊 {top['ticker']} #{1} Score:{top['total_score']}/100
-"
+    return (f"📊 {top['ticker']} #{1} Score:{top['total_score']}/100"
             f"Trump: {trump['direction']} {trump['confidence']:.0%}")
 
 def run_scan():
