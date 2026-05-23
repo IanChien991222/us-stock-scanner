@@ -300,3 +300,145 @@ def analyze_stock(ticker):
         }
     except Exception as e:
         print(f"[分析失敗] {ticker}: {e}"); return None
+<<<<<<< HEAD
+=======
+
+def rounded_box(draw, xy, fill, radius=24, outline=None, width=1):
+    draw.rounded_rectangle(xy, radius=radius, fill=fill, outline=outline, width=width)
+
+def draw_text(draw, xy, text, font, fill=None):
+    draw.text(xy, text, font=font, fill=fill or TEXT)
+
+def make_canvas():
+    img = Image.new("RGB", (CARD_W, CARD_H), BG)
+    return img
+def save_overview_card(results, trump):
+    img  = make_canvas()
+    draw = ImageDraw.Draw(img)
+    rounded_box(draw, [40,40,CARD_W-40,CARD_H-40], PANEL, radius=28, outline=LINE, width=2)
+    draw_text(draw, (70,70),  "US STOCK DAILY SCAN", FONT_XL)
+    draw_text(draw, (70,140), datetime.now().strftime("%Y-%m-%d  %H:%M"), FONT_SM, MUTED)
+    rounded_box(draw, [70,190,550,320], PANEL_2, radius=22)
+    draw_text(draw, (95,215),  "Market Context", FONT_MD, MUTED)
+    draw_text(draw, (95,255),  f"Trump: {trump['direction']}", FONT_LG)
+    draw_text(draw, (95,295),  f"Confidence {trump['confidence']:.0%}", FONT_SM, MUTED)
+    rounded_box(draw, [580,190,1210,320], PANEL_2, radius=22)
+    draw_text(draw, (605,215), "Today's Bias", FONT_MD, MUTED)
+    top = results[0]["total_score"] if results else 0
+    bias = "🟢 BULLISH" if top >= 70 else "🟡 NEUTRAL" if top >= 55 else "🔴 CAUTION"
+    draw_text(draw, (605,255), bias, FONT_LG)
+    draw_text(draw, (70,370),  "Top Picks", FONT_LG)
+    y = 430
+    for i, r in enumerate(results[:5], 1):
+        rounded_box(draw, [70,y,1210,y+70], PANEL_2, radius=18)
+        tag = "⚡" if r.get("mode")=="breakout" else "📊"
+        draw_text(draw, (95,y+20),   f"#{i} {tag}", FONT_MD, MUTED)
+        draw_text(draw, (175,y+18),  r["ticker"],   FONT_MD)
+        draw_text(draw, (340,y+18),  f"Score {r['total_score']}/100", FONT_MD, ACCENT)
+        draw_text(draw, (620,y+18),  f"${r['close']:.2f}", FONT_MD)
+        draw_text(draw, (900,y+18),  classify_action(r), FONT_MD, GREEN)
+        y += 84
+    draw_text(draw, (70,660), "For research only – not investment advice", FONT_XS, MUTED)
+    os.makedirs(OUT_DIR, exist_ok=True)
+    path = os.path.join(OUT_DIR, "00_overview.png")
+    img.save(path); return path
+
+def save_stock_card(rank, result):
+    img  = make_canvas()
+    draw = ImageDraw.Draw(img)
+    rounded_box(draw, [40,40,CARD_W-40,CARD_H-40], PANEL, radius=28, outline=LINE, width=2)
+    tag = "⚡ BREAKOUT" if result.get("mode")=="breakout" else "📊 BLUECHIP"
+    draw_text(draw, (70,70), f"#{rank}  {result['ticker']}  {tag}", FONT_XL)
+    draw_text(draw, (1030,82), f"{result['total_score']}/100", FONT_LG, ACCENT)
+    rounded_box(draw, [70,170,390,300], PANEL_2, radius=22)
+    draw_text(draw, (95,195),  "Price",       FONT_SM, MUTED)
+    draw_text(draw, (95,235),  f"${result['close']:.2f}", FONT_LG)
+    rounded_box(draw, [430,170,750,300], PANEL_2, radius=22)
+    draw_text(draw, (455,195), "Stop Loss",   FONT_SM, MUTED)
+    draw_text(draw, (455,235), f"${result['stop_loss']:.2f}", FONT_LG)
+    rsi_color = GREEN if result["rsi"] < 68 else YELLOW
+    rounded_box(draw, [790,170,1110,300], PANEL_2, radius=22)
+    draw_text(draw, (815,195), "RSI",         FONT_SM, MUTED)
+    draw_text(draw, (815,235), f"{result['rsi']:.0f}", FONT_LG, rsi_color)
+    rounded_box(draw, [70,330,540,530], PANEL_2, radius=22)
+    draw_text(draw, (95,355),  "Snapshot",    FONT_MD, MUTED)
+    draw_text(draw, (95,400),  f"Sector  {result['sector']}", FONT_SM)
+    draw_text(draw, (95,435),  f"5D Chg  {result['pct_5d']:+.1f}%", FONT_SM)
+    draw_text(draw, (95,470),  f"vs 52W Hi  {result['pct_from_52w_high']:.1f}%", FONT_SM)
+    draw_text(draw, (95,505),  f"Vol Spike  {result['vol_spike']:.1f}x", FONT_SM)
+    rounded_box(draw, [570,330,1210,590], PANEL_2, radius=22)
+    draw_text(draw, (595,355), "Why It Made the List", FONT_MD, MUTED)
+    y = 400
+    for sig in result["signals"][:5]:
+        for line in textwrap.wrap(f"• {sig}", width=38):
+            draw_text(draw, (595,y), line, FONT_SM); y += 34
+        y += 4
+    rounded_box(draw, [70,545,1210,650], "#10233D", radius=22, outline=ACCENT, width=2)
+    draw_text(draw, (95,572),  "Decision",         FONT_SM, MUTED)
+    draw_text(draw, (95,605),  classify_action(result), FONT_LG, ACCENT)
+    if result.get("pullback_signal"):
+        draw_text(draw, (550,605), f"ATR Stop: {result['stop_loss_pct']:.1f}%", FONT_SM, YELLOW)
+    draw_text(draw, (70,670),  "For research only – not investment advice", FONT_XS, MUTED)
+    os.makedirs(OUT_DIR, exist_ok=True)
+    path = os.path.join(OUT_DIR, f"{rank:02d}_{result['ticker']}.png")
+    img.save(path); return path
+
+def generate_report_images(results, trump):
+    paths = [save_overview_card(results, trump)]
+    for i, r in enumerate(results[:5], 1):
+        paths.append(save_stock_card(i, r))
+    return paths
+
+def build_caption(results, trump):
+    if not results: return "No picks today."
+    top = results[0]
+    return (f"📊 {top['ticker']} #{1} Score:{top['total_score']}/100"
+            f"Trump: {trump['direction']} {trump['confidence']:.0%}")
+
+def run_scan():
+    print(f"[{datetime.now().strftime('%H:%M')}] Trump signal...")
+    trump = get_trump_signal()
+    print(f"  → {trump['direction']} / score {trump['score']}")
+
+    results = []
+
+    print("[掃描] 龍頭股...")
+    for ticker in WATCHLIST:
+        r = analyze_stock(ticker, mode="normal")
+        if r and r["total_score"] >= 25:
+            news = get_news_sentiment(ticker)
+            r["total_score"] += trump["score"] + max(-15, min(15, news["score"]*3))
+            results.append(r)
+
+    print("[掃描] 爆發股（POET 類型）...")
+    breakout_hits = []
+    for ticker in BREAKOUT_WATCHLIST:
+        r = analyze_stock(ticker, mode="breakout")
+        if r and r["total_score"] >= 20:
+            news = get_news_sentiment(ticker)
+            r["total_score"] += trump["score"] + max(-15, min(15, news["score"]*3))
+            breakout_hits.append(r)
+
+    breakout_hits.sort(key=lambda x: x["total_score"], reverse=True)
+    results.sort(key=lambda x: x["total_score"], reverse=True)
+
+    # 前3龍頭 + 前2爆發股 混合推薦
+    final = results[:3] + breakout_hits[:2]
+    final.sort(key=lambda x: x["total_score"], reverse=True)
+
+    print(f"[結果] 龍頭 {len(results)} 檔，爆發 {len(breakout_hits)} 檔，推薦 {len(final)} 檔")
+
+    if not final:
+        send_telegram_text("📊 今日掃描完成，暫無達標標的。")
+        return
+
+    image_paths = generate_report_images(final, trump)
+    caption     = build_caption(final, trump)
+    send_telegram_photos(image_paths, caption=caption)
+    print("[完成] 圖片已發送到 Telegram")
+    for p in image_paths:
+        print(f"  {p}")
+
+if __name__ == "__main__":
+    run_scan()
+>>>>>>> 5691df04ce8cf2d1d0a02fb81afa4207b46556ad
