@@ -214,29 +214,32 @@ def analyze_stock(ticker: str):
 
 def format_report(results, trump):
     now = datetime.now().strftime("%Y/%m/%d %H:%M")
-    msg = f"""📊 *美股每日掃描報告*
-━━━━━━━━━━━━━━━━━━
-🗓 {now}（台灣時間）
-📡 川普訊號：*{trump['direction']}*（信心 {trump['confidence']:.0%}）
-{chr(10).join(trump["reasoning"])}
-━━━━━━━━━━━━━━━━━━
+    lines = [
+        "📊 美股每日掃描報告",
+        "━━━━━━━━━━━━━━━━━━",
+        f"🗓 {now}（台灣時間）",
+        f"📡 川普訊號：{trump['direction']}（信心 {trump['confidence']:.0%}）",
+        *trump["reasoning"],
+        "━━━━━━━━━━━━━━━━━━",
+        ""
+    ]
 
-"""
     for i, r in enumerate(results[:5], 1):
-        msg += f"""*#{i} {r['ticker']}*
-💵 現價 `${r['close']:.2f}` | RSI `{r['rsi']:.0f}`
-📐 評分 `{r['total_score']}/100`
-📌 入場邏輯
-"""
-        for sig in r["signals"][:4]:
-            msg += f"• {sig}\n"
-        msg += f"""🛡 停損 `${r['stop_loss']:.2f}`（{r['stop_loss_pct']:.1f}%）
-📈 近5日 `{r['pct_5d']:+.1f}%` | 距高點 `{r['pct_from_52w_high']:.1f}%`
-🏢 {r['sector']}
+        lines.extend([
+            f"#{i} {r['ticker']}｜評分 {r['total_score']}/100",
+            f"現價 ${r['close']:.2f}｜RSI {r['rsi']:.0f}｜產業 {r['sector']}",
+            "入場邏輯："
+        ])
+        for sig in r["signals"][:3]:
+            lines.append(f"• {sig}")
+        lines.extend([
+            f"停損：${r['stop_loss']:.2f}（{r['stop_loss_pct']:.1f}%）",
+            f"5日：{r['pct_5d']:+.1f}%｜距高點：{r['pct_from_52w_high']:.1f}%",
+            "━━━━━━━━━━━━━━━━━━"
+        ])
 
-"""
-    msg += "⚠️ _僅供參考，非投資建議_"
-    return msg
+    lines.append("⚠️ 僅供參考，非投資建議")
+    return "\n".join(lines)
 
 def run_scan():
     trump = get_trump_signal()
