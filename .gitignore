@@ -1,2 +1,3 @@
 output_cards/
 .env
+.DS_Store
