@@ -1,6 +1,5 @@
 yfinance
 pandas
-pandas-ta
 requests
 python-dotenv
 Pillow
