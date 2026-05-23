@@ -300,8 +300,6 @@ def analyze_stock(ticker):
         }
     except Exception as e:
         print(f"[分析失敗] {ticker}: {e}"); return None
-<<<<<<< HEAD
-=======
 
 def rounded_box(draw, xy, fill, radius=24, outline=None, width=1):
     draw.rounded_rectangle(xy, radius=radius, fill=fill, outline=outline, width=width)
@@ -441,4 +439,4 @@ def run_scan():
 
 if __name__ == "__main__":
     run_scan()
->>>>>>> 5691df04ce8cf2d1d0a02fb81afa4207b46556ad
+
